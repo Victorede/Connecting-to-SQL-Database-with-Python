@@ -3,7 +3,7 @@
 # Configuration
 RELEASE_BRANCH="release_branch"
 PRODUCTION_BRANCH="production"
-EXCLUDE_COMMIT_PATTERN="Merge branch 'main' of"
+EXCLUDE_COMMIT_PATTERN="Merge branch 'main' of" 
 RELEASE_NOTES_FILE="RELEASE_NOTES.md" # Path to the RELEASE_NOTES.md file
 
 # Check if RELEASE_NOTES.md exists
@@ -12,48 +12,42 @@ if [ ! -f "$RELEASE_NOTES_FILE" ]; then
     exit 1
 fi
 
-# Extract patterns from RELEASE_NOTES.md
-branch_patterns=($(grep -o 'bias-[0-9]\+' "$RELEASE_NOTES_FILE" | sort | uniq))
+# Extract branch names from RELEASE_NOTES.md
+bias_branches=($(grep -o 'bias-[0-9]\+' "$RELEASE_NOTES_FILE" | sort | uniq))
 
-# Verify if any patterns were found
-if [ ${#branch_patterns[@]} -eq 0 ]; then
-    echo "No branch patterns found in the release notes."
+# Verify if any branches were found
+if [ ${#bias_branches[@]} -eq 0 ]; then
+    echo "No BIAS- branches found in the release notes."
     exit 1
 fi
 
-echo "Branch patterns found in release notes: ${branch_patterns[@]}"
+echo "Branches found in release notes: ${bias_branches[@]}"
 
-# Fetch remote branches
-git fetch origin
-
-# Find branches in the remote repository that match the patterns
-matching_branches=()
-for pattern in "${branch_patterns[@]}"; do
-    for remote_branch in $(git branch -r | grep "$pattern"); do
-        # Strip off 'origin/' prefix
-        branch_name="${remote_branch#origin/}"
-        matching_branches+=("$branch_name")
-    done
+# Check if the exact branches exist in the remote repository
+valid_branches=()
+for branch in "${bias_branches[@]}"; do
+    if git ls-remote --heads origin | grep -qw "$branch"; then
+        valid_branches+=($branch)
+    else
+        echo "Branch not found in remote: $branch"
+    fi
 done
 
-# Remove duplicates
-matching_branches=($(echo "${matching_branches[@]}" | tr ' ' '\n' | sort | uniq))
-
-# If no matching branches are found, exit the script
-if [ ${#matching_branches[@]} -eq 0 ]; then
-    echo "No matching branches found for merging."
+# If no valid branches are found, exit the script
+if [ ${#valid_branches[@]} -eq 0 ]; then
+    echo "No valid branches found for merging."
     exit 1
 fi
 
-echo "Matching branches for merging: ${matching_branches[@]}"
+echo "Valid branches for merging: ${valid_branches[@]}"
 
 # Create or checkout the release branch and sync with the production branch
 git checkout -B $RELEASE_BRANCH
 git pull origin $PRODUCTION_BRANCH
 
-# ------------------------------- Squash commit of the matching branches -------------------------------
+# ------------------------------- Squash commit of the valid branches -------------------------------
 
-for branch in "${matching_branches[@]}"; do
+for branch in "${valid_branches[@]}"; do
     # Pull all commits from the branch
     git checkout -B $branch origin/$branch
 
@@ -76,7 +70,7 @@ done
 
 git checkout $RELEASE_BRANCH
 
-for branch in "${matching_branches[@]}"; do
+for branch in "${valid_branches[@]}"; do
     remote_branch="origin/$branch"
     
     echo "Merging: $remote_branch"
