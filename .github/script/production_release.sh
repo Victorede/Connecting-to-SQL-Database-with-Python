@@ -13,7 +13,7 @@ if [ ! -f "$RELEASE_NOTES_FILE" ]; then
 fi
 
 # Extract patterns from RELEASE_NOTES.md (case-insensitive)
-branch_patterns=($(grep -io 'bias-[0-9]\+' "$RELEASE_NOTES_FILE" | sort | uniq))
+branch_patterns=($(grep -io 'bias-[0-9][^-]*' "$RELEASE_NOTES_FILE" | sort | uniq))
 
 # Verify if any patterns were found
 if [ ${#branch_patterns[@]} -eq 0 ]; then
