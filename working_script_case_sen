@@ -12,8 +12,8 @@ if [ ! -f "$RELEASE_NOTES_FILE" ]; then
     exit 1
 fi
 
-# Extract patterns from RELEASE_NOTES.md (case-insensitive)
-branch_patterns=($(grep -io 'bias-[0-9]\+' "$RELEASE_NOTES_FILE" | sort | uniq))
+# Extract patterns from RELEASE_NOTES.md
+branch_patterns=($(grep -o 'bias-[0-9]\+' "$RELEASE_NOTES_FILE" | sort | uniq))
 
 # Verify if any patterns were found
 if [ ${#branch_patterns[@]} -eq 0 ]; then
@@ -26,10 +26,10 @@ echo "Branch patterns found in release notes: ${branch_patterns[@]}"
 # Fetch remote branches
 git fetch origin
 
-# Find branches in the remote repository that match the patterns (case-insensitive)
+# Find branches in the remote repository that match the patterns
 matching_branches=()
 for pattern in "${branch_patterns[@]}"; do
-    for remote_branch in $(git branch -r | grep -i "$pattern"); do
+    for remote_branch in $(git branch -r | grep "$pattern"); do
         # Strip off 'origin/' prefix
         branch_name="${remote_branch#origin/}"
         matching_branches+=("$branch_name")
