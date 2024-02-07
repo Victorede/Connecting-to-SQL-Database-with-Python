@@ -3,7 +3,7 @@
 # Configuration
 RELEASE_BRANCH="release_branch"
 PRODUCTION_BRANCH="production"
-EXCLUDE_COMMIT_PATTERN="Merge branch 'main' of"
+EXCLUDE_COMMIT_PATTERN="Merge branch 'main' into"
 RELEASE_NOTES_FILE="RELEASE_NOTES.md" # Path to the RELEASE_NOTES.md file
 
 # Check if RELEASE_NOTES.md exists
